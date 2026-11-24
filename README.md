@@ -8,7 +8,7 @@ With Node.js 22 or newer, run `npm start` and open http://localhost:41783. No in
 
 ## Play
 
-Choose preparation, fluid, size, fill, and heat. Start the experiment, lower the hoist with its slider, adjust heat, and choose when to serve. Pause and speed controls affect simulation time. The cutaway shows immersion, not the hidden interior. Carving reveals the modeled center slice. Catastrophic damage, inactivity, or the one-hour simulated limit ends a run.
+Choose preparation, fluid, size, fill, and heat. Start the experiment, turn the illustrated crank clockwise to lower or counterclockwise to raise (touch/mouse drag; arrow keys when focused), adjust heat, and choose when to serve. Pause and speed controls affect simulation time. The cutaway shows immersion, not the hidden interior. Carving reveals the modeled center slice. Catastrophic damage, inactivity, or the one-hour simulated limit ends a run.
 
 ## Publish to GitHub Pages
 

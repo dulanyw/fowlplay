@@ -21,3 +21,5 @@ Push this repository to GitHub. In Settings → Pages, select deployment from th
 `src/art.js` draws original procedural illustrations. `src/game.js` owns UI, orchestration, sharing and local persistence. `tools/serve.mjs` serves local assets at the approved port. No analytics, external fonts, image assets, runtime packages, or account credentials are used. Six outcome achievements are stored locally; replay viewing does not unlock trophies. Sound is off by default. Native labeled controls support keyboard and touch; the animated canvas has a descriptive accessible label and live status text, but is not a complete nonvisual game experience.
 
 All artwork and code were created for this project. A distribution license has not yet been selected.
+
+Simulation v2 shares the same turkey/fluid geometry between drawing and heat transfer. Only cells below the visible liquid surface receive liquid heat. Air exchange uses ambient 22°C; hot plumes, steam convection, radiation, and fire-to-meat heating are not modeled. Older v1 replay links are not replayed under the changed model. `src/geometry.js` owns immersion and displacement geometry.

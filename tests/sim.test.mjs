@@ -2,6 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createState,advance,assess,carvingDetails} from '../src/sim.js';
 import {earnedAchievements} from '../src/achievements.js';
+import {immersionGeometry,cellIsImmersed} from '../src/geometry.js';
 const setup={prep:'thawed',fluid:'oil',mass:5,fill:50,heat:180};
 test('heat penetrates from edge toward core',()=>{const s=createState(setup);for(let i=0;i<400;i++)advance(s,{depth:100,heat:180});const center=s.cells.find(c=>c.x===9&&c.y===9);const edge=s.cells.find(c=>c.x===9&&c.y===18);assert.ok(edge.t>center.t);assert.ok(center.t>5);});
 test('overflow removes fluid and causes escalating damage',()=>{const s=createState({...setup,fill:90,prep:'frozen',heat:300});for(let i=0;i<500;i++)advance(s,{depth:100,heat:300});assert.ok(s.spill>0);assert.ok(s.damage>0);assert.ok(s.fill<.9);});
@@ -37,4 +38,24 @@ test('achievement rules reward distinct outcomes and respect thresholds',()=>{
  assert.ok(forbidden.includes('forbidden'));assert.ok(!forbidden.includes('crouton'));
  s.setup.fluid='oil';for(const c of s.cells){const r=((c.x-9)/8)**2+((c.y-9)/9)**2;c.t=r>=.65?80:-5;c.ice=r>=.65?0:10;}
  assert.ok(earnedAchievements(s,{score:0,damage:0}).includes('glacier'));
+});
+
+test('mercury cannot cook a bird suspended visibly above the fluid',()=>{
+ for(const fill of [15,50,90]){
+  const s=createState({...setup,fluid:'mercury',fill,heat:400});
+  for(let i=0;i<2100&&!s.ended;i++)advance(s,{depth:100,heat:400});
+  const geometry=immersionGeometry(s.depth,s.fill,s.setup.mass);
+  assert.ok(geometry.bottom<geometry.surface);
+  assert.equal(geometry.submerged,0);
+  assert.ok(s.cells.every(c=>c.t<=22));
+  assert.equal(s.brown,0);assert.equal(s.spill,0);
+  assert.equal(carvingDetails(s).outside.percent,0);
+ }
+});
+
+test('thermal immersion matches the shared drawn surface and depends on fill',()=>{
+ const low=immersionGeometry(.8,.15,5),high=immersionGeometry(.8,.9,5);
+ assert.ok(high.submerged>low.submerged);
+ const s=createState(setup);
+ for(const c of s.cells){const y=low.top+c.y/18*(low.bottom-low.top);assert.equal(cellIsImmersed(c,low,19),y>=low.surface);}
 });

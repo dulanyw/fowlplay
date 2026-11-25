@@ -1,6 +1,6 @@
 # Fowl Play
 
-A dependency-free cartoon turkey cooking sandbox. All simulation, audio, saved discoveries, replay decoding, and image export run in the browser.
+A dependency-free cartoon turkey cooking sandbox. All simulation, audio, saved achievements, replay decoding, and image export run in the browser.
 
 ## Run
 
@@ -18,6 +18,6 @@ Push this repository to GitHub. In Settings → Pages, select deployment from th
 
 `src/sim.js` owns configuration and fixed-step simulation. A 19×19 elliptical center slice models neighboring heat transfer, simplified ice melting, cooking exposure, and drying. Displaced volume depends on size and immersion. Fluid properties drive heat transfer, overflow, bubbling, and ignition thresholds. This is a game approximation, not validated cooking, chemical, or fire guidance. It does not model a full 3D bird. Replay format v1 targets the same simulation version; future model changes need version retention or migration.
 
-`src/art.js` draws original procedural illustrations. `src/game.js` owns UI, orchestration, sharing and local persistence. `tools/serve.mjs` serves local assets at the approved port. No analytics, external fonts, image assets, runtime packages, or account credentials are used. Sound is off by default. Native labeled controls support keyboard and touch; the animated canvas has a descriptive accessible label and live status text, but is not a complete nonvisual game experience.
+`src/art.js` draws original procedural illustrations. `src/game.js` owns UI, orchestration, sharing and local persistence. `tools/serve.mjs` serves local assets at the approved port. No analytics, external fonts, image assets, runtime packages, or account credentials are used. Six outcome achievements are stored locally; replay viewing does not unlock trophies. Sound is off by default. Native labeled controls support keyboard and touch; the animated canvas has a descriptive accessible label and live status text, but is not a complete nonvisual game experience.
 
 All artwork and code were created for this project. A distribution license has not yet been selected.

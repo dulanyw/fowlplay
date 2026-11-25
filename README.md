@@ -8,7 +8,7 @@ With Node.js 22 or newer, run `npm start` and open http://localhost:41783. No in
 
 ## Play
 
-Choose preparation, fluid, size, fill, and heat. Start the experiment, turn the illustrated crank clockwise to lower or counterclockwise to raise (touch/mouse drag; arrow keys when focused), adjust heat, and choose when to serve. Pause and speed controls affect simulation time. The cutaway shows immersion, not the hidden interior. Carving reveals the modeled center slice. Catastrophic damage, inactivity, or the one-hour simulated limit ends a run.
+Play opens setup: choose preparation, fluid, size, fill, and starting heat. Ready to cook opens the backyard. Turn the illustrated crank clockwise to lower or counterclockwise to raise (touch/mouse drag; arrow keys when focused), adjust the live burner target, and choose when to serve. Pause and speed controls affect simulation time. The cutaway shows immersion, not the hidden interior. A separate carving screen shows the whole turkey on a dining table, a knife stroke, and a sliding slice that reveals the modeled center. After the animation, Score me! opens the final verdict and sharing screen. Players may inspect the cut indefinitely. Retry setup starts a fresh round with the same initial choices; New experiment returns to setup. Catastrophic damage, inactivity, or the one-hour simulated limit ends a run.
 
 ## Publish to GitHub Pages
 

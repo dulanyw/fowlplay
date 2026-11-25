@@ -29,5 +29,37 @@ oval(c,440,580,196,27,'#35443b');box(c,291,358,298,192,'#6a8288',26);box(c,264,3
 box(c,329,551,222,18,'#242a2b');line(c,349,570,331,605,'#242a2b',9);line(c,531,570,549,605,'#242a2b',9);for(let i=0;i<7;i++){const h=13+Math.sin(visualTime*9+i)*6;shape(c,'#f6ba58',()=>{c.moveTo(366+i*23,554);c.quadraticCurveTo(361+i*23,543,373+i*23,554-h);c.quadraticCurveTo(390+i*23,547,382+i*23,554);});}
 if(s.spill>.001)oval(c,440,594,Math.min(180,55+s.spill*350),12,fluid.color);for(let i=0;i<s.chaos*12;i++){const p=(visualTime*.8+i*.123)%1;const side=i%2?1:-1;oval(c,440+side*(80+p*190),surface-Math.sin(p*Math.PI)*(70+s.chaos*26)+p*70,4+i%4,6+i%5,fluid.color);}
 for(let i=0;i<Math.ceil(s.fire*32);i++){const x=280+(i*71)%420;const base=580-(i%4)*17;const h=(35+Math.sin(visualTime*8+i)*15)*s.fire;shape(c,i%2?'#ffbc50':'#f16c3c',()=>{c.moveTo(x-15,base);c.quadraticCurveTo(x-28,base-h*.4,x+3,base-h);c.quadraticCurveTo(x+29,base-h*.2,x+15,base);});}}
-// Reveal the actual simulated cell temperatures, clipped to a carved breast silhouette.
-export function drawCarving(c,s,progress=1){c.clearRect(0,0,760,340);oval(c,380,200,264,114,'#a9b9b4');oval(c,380,200,240,91,'#d9ddd0');c.save();c.translate(380,164);c.scale(.7+.3*progress,.7+.3*progress);oval(c,-100-progress*17,0,92,112,s.brown>2?'#594132':'#c78b50');oval(c,100+progress*17,0,92,112,s.brown>2?'#594132':'#c78b50');for(const side of [-1,1]){c.save();c.translate(side*(100+progress*17),0);c.beginPath();c.ellipse(0,0,80,101,0,0,Math.PI*2);c.clip();for(const cell of s.cells){c.fillStyle=cell.ice>0||cell.t<0?'#a9dfed':cell.t<55?'#df9f9e':cell.t<68?'#ecc0ae':cell.t<90?'#f3dfb4':cell.t<120?'#c7a27a':'#795c43';c.fillRect((cell.x-9)*10-5,(cell.y-9)*11-5,11,12);}c.restore();}c.restore();if(progress<.65){c.save();c.translate(380,30+progress*300);c.rotate(-.3);box(c,-5,-95,17,94,'#dbe4df',3);box(c,-7,-131,21,40,'#835f42',4);c.restore();}text(c,progress<1?'THE MOMENT OF TRUTH…':'OUTSIDE CONFIDENCE. INSIDE EVIDENCE.',380,310,13,'#b6bdb7');}
+// Map each modeled cell to a visible food color; reused for both exposed cut faces.
+function meatColor(cell){return cell.ice>0||cell.t<0?'#a9dfed':cell.t<55?'#df9f9e':cell.t<68?'#ecc0ae':cell.t<90?'#f3dfb4':cell.t<120?'#c7a27a':'#795c43';}
+// Paint a quantized cross-section, clipped to a breast-shaped ellipse at the requested position.
+function cutFace(c,s,x,y,rx,ry){
+ oval(c,x,y,rx+7,ry+7,s.brown>2?'#594132':'#bf7c3c');
+ c.save();c.beginPath();c.ellipse(x,y,rx,ry,0,0,Math.PI*2);c.clip();c.fillStyle='#e8bc8c';c.fillRect(x-rx,y-ry,rx*2,ry*2);
+ for(const cell of s.cells){c.fillStyle=meatColor(cell);c.fillRect(x+(cell.x-9)*rx/8-rx/16,y+(cell.y-9)*ry/9-ry/18,rx/8+1,ry/9+1);}c.restore();
+}
+// Stage a whole turkey, descending knife, then sliding slice. Progress is normalized wall time.
+// No simulation is changed; the exposed faces use the completed run's actual tissue grid.
+export function drawCarving(c,s,progress=1){
+ c.clearRect(0,0,1000,560);
+ const wall=c.createLinearGradient(0,0,0,400);wall.addColorStop(0,'#354747');wall.addColorStop(1,'#53615a');c.fillStyle=wall;c.fillRect(0,0,1000,560);
+ // Dining-room window and afternoon light.
+ box(c,70,38,180,150,'#a7c9cb',5);line(c,160,40,160,185,'#ddccb0',8);line(c,72,112,248,112,'#ddccb0',8);
+ c.fillStyle='#a47b54';c.fillRect(0,330,1000,230);for(let y=350;y<560;y+=55)line(c,0,y,1000,y,'#8d6748',2);
+ shape(c,'#b98f63',()=>{c.moveTo(200,330);c.lineTo(570,560);c.lineTo(920,560);c.lineTo(450,330);},null);
+ oval(c,510,385,325,81,'#6d513b');oval(c,500,358,330,94,'#b8c6bb');oval(c,500,350,300,76,'#e3e2cb');
+ const cut=Math.max(0,Math.min(1,(progress-.22)/.35));const slide=Math.max(0,Math.min(1,(progress-.62)/.28));const eased=slide*slide*(3-2*slide);
+ // The intact body has wings, drumsticks, highlights and a roast silhouette.
+ bird(c,440,282,1.1,s.brown);
+ const skin=s.brown>2?'#594132':s.brown>.6?'#b87539':'#dca16a';
+ shape(c,skin,()=>{c.moveTo(350,345);c.bezierCurveTo(280,230,350,172,461,182);c.bezierCurveTo(560,176,619,234,594,333);c.bezierCurveTo(530,370,413,369,350,345);});
+ line(c,370,230,404,210,s.brown>2?'#77553b':'#efbf84',7);
+ // Foreground wing and drumstick keep the whole roast recognizable on the platter.
+ oval(c,369,302,44,25,skin);
+ c.save();c.translate(452,340);c.rotate(-.45);oval(c,0,0,30,43,skin);line(c,0,34,0,66,'#efdfbb',14);oval(c,-5,69,10,7,'#efdfbb');oval(c,7,69,10,7,'#efdfbb');c.restore();
+ // The slice starts flush; separation exposes the body and a matching cut surface.
+ if(slide>0){cutFace(c,s,568,280,61,80);c.save();c.translate(44*eased,11*eased);cutFace(c,s,610+86*eased,280,56,75);c.restore();}
+ else{oval(c,588,280,64,84,skin);line(c,618,247,626,274,s.brown>2?'#77553b':'#efbf84',5);}
+ // A knife enters above the seam, saws downward, then withdraws before the slice moves.
+ if(progress>=.18&&progress<.68){const lift=progress>.57?(progress-.57)/.11:0;const knifeY=115+cut*204-lift*340;const saw=Math.sin(cut*35)*9;c.save();c.translate(566+saw,knifeY);c.rotate(-.18);shape(c,'#dce6df',()=>{c.moveTo(-8,-125);c.lineTo(15,-125);c.lineTo(15,0);c.quadraticCurveTo(-6,11,-8,-14);});line(c,-4,-112,-4,-20,'#ffffff',2);box(c,-12,-181,31,60,'#785740',5);oval(c,3,-157,3,3,'#d0b992');c.restore();}
+ if(progress>.4&&slide===0)line(c,566,203,566,203+cut*139,'#765236',3);
+}

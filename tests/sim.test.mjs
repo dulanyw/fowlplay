@@ -59,3 +59,26 @@ test('thermal immersion matches the shared drawn surface and depends on fill',()
  const s=createState(setup);
  for(const c of s.cells){const y=low.top+c.y/18*(low.bottom-low.top);assert.equal(cellIsImmersed(c,low,19),y>=low.surface);}
 });
+
+test('hot water evaporates without immersion and never fuels fire',()=>{
+ const s=createState({...setup,fluid:'water',heat:180});
+ for(let i=0;i<150;i++)advance(s,{depth:0,heat:180});
+ assert.ok(s.evaporated>.01);assert.ok(s.fill<.5);assert.ok(s.vapor>.01);
+ assert.equal(s.spill,0);assert.equal(s.fire,0);assert.ok(s.cells.every(c=>c.t<=22));
+});
+
+test('overflow produces runoff before feeding oil flames',()=>{
+ const s=createState({...setup,fill:90,heat:250});
+ advance(s,{depth:100,heat:250});assert.ok(s.overflowRate>0);assert.ok(s.spill>0);
+ for(let i=0;i<200;i++)advance(s,{depth:100,heat:250});
+ assert.ok(s.spillFuel>0);assert.ok(s.fire>0);
+});
+
+test('quiet runs bore the neighbor while spilled goo climbs',()=>{
+ const quiet=createState({...setup,heat:20});
+ for(let i=0;i<100;i++)advance(quiet,{depth:0,heat:20});
+ assert.ok(quiet.quietTime>=8);
+ const goo=createState({...setup,fluid:'goo',fill:90,heat:80});
+ for(let i=0;i<300;i++)advance(goo,{depth:100,heat:80});
+ assert.ok(goo.spill>.002);assert.ok(goo.gooCreep>.3);assert.equal(goo.fire,0);
+});

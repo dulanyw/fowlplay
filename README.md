@@ -23,3 +23,5 @@ Push this repository to GitHub. In Settings → Pages, select deployment from th
 All artwork and code were created for this project. A distribution license has not yet been selected.
 
 Simulation v2 shares the same turkey/fluid geometry between drawing and heat transfer. Only cells below the visible liquid surface receive liquid heat. Air exchange uses ambient 22°C; hot plumes, steam convection, radiation, and fire-to-meat heating are not modeled. Older v1 replay links are not replayed under the changed model. `src/geometry.js` owns immersion and displacement geometry.
+
+Simulation v3 adds measured overflow streams, finite spilled fuel, evaporation and cooling, quiet-time neighbor reactions, and persistent goo growth over the fence. All use fixed simulation time, so pause and speed controls apply consistently. `src/effects.js` owns these rates and state transitions. Evaporation removes liquid without immersion; the resulting vapor is visual and does not heat the turkey. Replay links must match the current simulation version (v3).

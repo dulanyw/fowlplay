@@ -30,6 +30,12 @@
 <section id="screen-carving" class="screen" hidden aria-labelledby="carving-heading">
 <div class="screen-heading"><div><span class="eyebrow">04 / CARVE</span><h2 id="carving-heading" tabindex="-1">The moment of truth.</h2></div></div>
 <div class="carving-stage"><canvas id="carving" width="1000" height="560" aria-label="A whole turkey on a table. A knife cuts a slice, then the slice slides aside to expose the simulated interior."></canvas></div>
+<div id="carving-details" class="carving-details" hidden aria-live="polite">
+  <div class="doneness-card"><span>OUTSIDE / OUTER MEAT</span><strong id="outside-doneness"></strong><p id="outside-condition"></p></div>
+  <div class="doneness-card"><span>INSIDE / CENTER</span><strong id="inside-doneness"></strong><p id="inside-condition"></p></div>
+  <p class="doneness-key">Percent of each region cooked. <span class="meat-key ice">Blue: frozen</span> · <span class="meat-key raw">Pink: underdone</span> · <span class="meat-key done">Cream: cooked</span> · <span class="meat-key dry">Brown: overdone</span></p>
+  <p id="carving-fluid-warning" class="hint" hidden>Inedible fluid — doneness doesn’t make this dinner.</p>
+</div>
 <div class="screen-actions"><span id="carving-status" class="hint" role="status">Carving…</span><button id="score-me" class="primary big-button" disabled>Score me! →</button></div>
 </section>
 <section id="screen-scoring" class="screen scoring-screen" hidden aria-labelledby="result-title">

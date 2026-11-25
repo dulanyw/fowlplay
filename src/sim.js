@@ -9,5 +9,19 @@ const lookup=new Map(s.cells.map(c=>[c.x+','+c.y,c]));const next=s.cells.map(c=>
 const ignition=f.flammable&&((s.spill>.003&&s.temp>110)||(s.setup.fluid==='alcohol'&&submerged>.02&&s.temp>45));s.fire=Math.max(0,Math.min(1.5,s.fire+dt*(ignition?.012+s.chaos*.006:-.008)));s.damage+=dt*(s.fire*260+s.chaos*overflow*80);const mean=next.reduce((a,c)=>a+c.t,0)/next.length;const changing=Math.abs(mean-s.lastMean)>.002||plunge>.01||s.fire>.05;s.still=changing?0:s.still+dt*CONFIG.clockRate;s.lastMean=mean;if(s.damage>=50000)endRun(s,'The backyard has left the chat.');else if(s.still>CONFIG.stallWindow)endRun(s,'The neighbor has other plans today.');else if(s.time>=CONFIG.maxTime)endRun(s,'The neighborhood has imposed a dinner deadline.');return s;}
 // End a run without modifying its cooked cells.
 export function endRun(s,reason='Dinner is served. Allegedly.'){s.ended=true;s.reason=reason;return s;}
+// Summarize outer and central tissue regions without changing the completed run.
+// Percent is the share of each region's cells reaching game doneness, not a safety rating.
+export function carvingDetails(s){
+ const center=(CONFIG.grid-1)/2;
+ const radius=c=>((c.x-center)/8)**2+((c.y-center)/9)**2;
+ const summarize=cells=>{
+  const temperature=cells.reduce((sum,c)=>sum+c.t,0)/cells.length;
+  const percent=Math.round(cells.filter(c=>c.t>=68&&c.ice===0).length/cells.length*100);
+  const dry=cells.reduce((sum,c)=>sum+c.dry,0)/cells.length;
+  const label=cells.some(c=>c.ice>0||c.t<0)?'Still frozen':temperature>110||dry>2?'Overdone':percent===100?'Cooked through':percent>0?'Unevenly cooked':'Underdone';
+  return{percent,temperature:Math.round(temperature),label};
+ };
+ return{outside:summarize(s.cells.filter(c=>radius(c)>=.65)),inside:summarize(s.cells.filter(c=>radius(c)<=.25))};
+}
 // Derive grades from the whole grid; contaminated fluids cannot score edible dinner.
 export function assess(s){const f=FLUIDS[s.setup.fluid];const cold=Math.min(...s.cells.map(c=>c.t));const mean=s.cells.reduce((a,c)=>a+c.t,0)/s.cells.length;const cooked=s.cells.filter(c=>c.t>=68&&c.ice===0).length/s.cells.length;const dry=s.cells.reduce((a,c)=>a+c.dry,0)/s.cells.length;const score=f.edible?Math.max(0,Math.round(cooked*85+Math.min(1,s.brown)*15-Math.max(0,dry-1)*18-Math.max(0,mean-90)*.8)):0;const title=!f.edible?'Chemically disqualified.':s.damage>10000&&score>65?'Dinner saved. Deck lost.':cold<0?'Golden outside. Glacier inside.':s.damage>20000?'An insurance event.':score>80?'Thanksgiving actually happened.':mean>110?'A deeply committed crouton.':cooked<.5?'A bird with unfinished business.':'Dinner, with reservations.';return{score,title,cold,mean,damage:Math.round(s.damage),text:!f.edible?'Thermally ambitious. Inedible by ingredient choice. The carving shows the heat distribution; it does not certify dinner.':`${Math.round(cooked*100)}% of the modeled slice reached the game’s doneness threshold. ${cold<30?'The center is still decidedly underdone.':dry>2?'Moisture has mostly become a fond memory.':'The neighbor would like a second opinion.'}`};}

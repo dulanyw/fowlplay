@@ -1,4 +1,4 @@
-import {CONFIG,FLUIDS,createState,advance,endRun,assess} from './sim.js';
+import {CONFIG,FLUIDS,createState,advance,endRun,assess,carvingDetails} from './sim.js';
 import {drawScene,drawCarving,bird} from './art.js';
 const $=id=>document.getElementById(id);
 const ctx=$('scene').getContext('2d');
@@ -7,6 +7,16 @@ let discovered={};try{discovered=JSON.parse(localStorage.getItem('fowl-discoveri
 for(const [id,f] of Object.entries(FLUIDS)){const o=document.createElement('option');o.value=id;o.textContent=f.name;$('fluid').append(o);}
 const SCREEN_HEADINGS={title:'title-heading',setup:'setup-heading',cooking:'cooking-heading',carving:'carving-heading',scoring:'result-title'};
 const CARVING_DURATION=5000;
+// Populate accessible region callouts from the same cells used to paint the cut faces.
+function prepareCarvingDetails(){
+ const details=carvingDetails(state);
+ for(const [region,values] of Object.entries(details)){
+  $(region+'-doneness').textContent=values.percent+'% cooked';
+  $(region+'-condition').textContent=values.label+' · '+values.temperature+'°C';
+ }
+ $('carving-fluid-warning').hidden=FLUIDS[state.setup.fluid].edible;
+ $('carving-details').hidden=true;
+}
 // Show exactly one screen, update progress and focus its heading. No simulation is started here.
 function showScreen(next){
  screen=next;
@@ -54,7 +64,7 @@ $('start').onclick=()=>startRun();$('serve').onclick=()=>{endRun(state);finishRu
 $('pause').onclick=()=>{paused=!paused;$('pause').textContent=paused?'▶ Resume':'Ⅱ Pause';};
 for(const b of document.querySelectorAll('[data-speed]'))b.onclick=()=>{speed=+b.dataset.speed;document.querySelectorAll('[data-speed]').forEach(x=>x.classList.toggle('active',x===b));};
 // Produce the report and persist only local discovery summaries, tolerating blocked storage.
-function finishRun(){if(!active)return;active=false;report=assess(state);finishedRecord=replay||{v:CONFIG.version,setup,events:record,end:Math.round(state.time/CONFIG.clockRate/CONFIG.step)};$('status').textContent='DONE';$('pause').disabled=true;$('serve').disabled=true;$('result-title').textContent=report.title;$('dinner-score').textContent=report.score+'/100';$('damage-score').textContent='$'+report.damage.toLocaleString();$('assessment').textContent=FLUIDS[state.setup.fluid].edible?Math.round(state.cells.filter(c=>c.t>=68&&c.ice===0).length/state.cells.length*100)+'% cooked · '+(report.mean>110?'Overdone':report.cold<55?'Cold center':'Dinner is served'):'Inedible fluid. Dinner disqualified.';$('share-status').textContent='';discovered[state.setup.fluid]={score:report.score,title:report.title};try{localStorage.setItem('fowl-discoveries',JSON.stringify(discovered));}catch{}updateBook();carveStart=performance.now();$('score-me').disabled=true;$('carving-status').textContent='Carving…';showScreen('carving');}
+function finishRun(){if(!active)return;active=false;report=assess(state);finishedRecord=replay||{v:CONFIG.version,setup,events:record,end:Math.round(state.time/CONFIG.clockRate/CONFIG.step)};$('status').textContent='DONE';$('pause').disabled=true;$('serve').disabled=true;$('result-title').textContent=report.title;$('dinner-score').textContent=report.score+'/100';$('damage-score').textContent='$'+report.damage.toLocaleString();$('assessment').textContent=FLUIDS[state.setup.fluid].edible?Math.round(state.cells.filter(c=>c.t>=68&&c.ice===0).length/state.cells.length*100)+'% cooked · '+(report.mean>110?'Overdone':report.cold<55?'Cold center':'Dinner is served'):'Inedible fluid. Dinner disqualified.';$('share-status').textContent='';discovered[state.setup.fluid]={score:report.score,title:report.title};try{localStorage.setItem('fowl-discoveries',JSON.stringify(discovered));}catch{}updateBook();prepareCarvingDetails();carveStart=performance.now();$('score-me').disabled=true;$('carving-status').textContent='Carving…';showScreen('carving');}
 // Reset the same setup for a fast experiment retry.
 function resetRun(){
  active=false;paused=false;state=null;replay=null;report=null;crankAngle=0;hoistPosition=0;releaseCrank();
@@ -80,6 +90,6 @@ function parseReplay(){try{const hash=location.hash;if(!hash.startsWith('#run=')
 // Single animation orchestrator separates fixed-step physics from visual rendering.
 function frame(now){const elapsed=Math.min(.1,(now-last)/1000||0);last=now;if(!paused&&!state.ended)visualTime+=elapsed*(active?speed:1);if(active&&!paused){accumulator+=elapsed*speed;let steps=0;while(accumulator>=CONFIG.step&&active&&steps++<100){const tick=Math.round(state.time/CONFIG.clockRate/CONFIG.step);if(replay){while(replayIndex<replay.events.length&&replay.events[replayIndex][0]<=tick){const e=replay.events[replayIndex++];$('depth').value=e[1];$('burner').value=e[2];$('burner-out').textContent=e[2]+'°C';$('scene').setAttribute('aria-valuenow',String(e[1]));crankAngle=e[1]/100*Math.PI*4;}if(tick>=replay.end)endRun(state);}advance(state,{depth:+$('depth').value,heat:+$('burner').value});accumulator-=CONFIG.step;if(state.ended)finishRun();}}
 drawScene(ctx,state,FLUIDS[state.setup.fluid],visualTime,crankAngle);$('temperature').innerHTML=Math.round(state.temp)+'<span>°C</span>';$('clock').textContent=String(Math.floor(state.time/60)).padStart(2,'0')+':'+String(Math.floor(state.time%60)).padStart(2,'0');$('remark').textContent=state.damage>20000?'Fence: retired.':state.fire>.2?'Well, that’s on fire.':state.chaos>1.5?'Getting lively.':state.setup.fluid==='mercury'&&state.depth>.1?'It floats.':state.time?'↻ Lower · ↺ Raise':'Drag the crank · ↻ Lower · ↺ Raise';if(screen==='title')drawScene($('title-scene').getContext('2d'),state,FLUIDS[state.setup.fluid],visualTime,0);
-if(screen==='carving'){const progress=Math.min(1,(now-carveStart)/CARVING_DURATION);drawCarving($('carving').getContext('2d'),state,progress);if(progress===1&&$('score-me').disabled){$('score-me').disabled=false;$('carving-status').textContent='Take a look. No rush.';}}
+if(screen==='carving'){const progress=Math.min(1,(now-carveStart)/CARVING_DURATION);drawCarving($('carving').getContext('2d'),state,progress);if(progress>=.8)$('carving-details').hidden=false;if(progress===1&&$('score-me').disabled){$('score-me').disabled=false;$('carving-status').textContent='Take a look. No rush.';}}
 if(gain){gain.gain.value=sound&&active&&!paused?Math.min(.025,.003+state.chaos*.006):0;oscillator.frequency.value=50+state.chaos*35+Math.sin(now*.02)*10;}requestAnimationFrame(frame);}
 updateControls();updateBook();const incoming=parseReplay();if(incoming){for(const k of ['prep','fluid','mass','fill','heat'])$(k).value=incoming.setup[k];updateControls();$('play').textContent='Watch shared incident →';$('play').onclick=()=>{showScreen('setup');$('start').textContent='Watch replay →';$('start').onclick=()=>startRun(incoming);};}requestAnimationFrame(frame);

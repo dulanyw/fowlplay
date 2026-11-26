@@ -42,7 +42,7 @@ function recordControl(){const event=[Math.round(state.time/CONFIG.clockRate/CON
 // Map pointer positions to illustration coordinates, independent of responsive display size.
 function scenePoint(e){const r=$('scene').getBoundingClientRect();return{x:(e.clientX-r.left)*1000/r.width,y:(e.clientY-r.top)*660/r.height};}
 // Apply hoist motion through the existing input contract so replay recording stays identical.
-function turnCrank(delta){if(!active||replay||state.ended)return;crankAngle+=delta;hoistPosition=Math.max(0,Math.min(100,hoistPosition+delta*100/(Math.PI*4)));$('depth').value=Math.round(hoistPosition);$('depth').dispatchEvent(new Event('input'));$('scene').setAttribute('aria-valuenow',$('depth').value);}
+function turnCrank(delta){if(!active||replay||state.ended)return;if(Math.abs(delta)>.001)$('crank-hint').hidden=true;crankAngle+=delta;hoistPosition=Math.max(0,Math.min(100,hoistPosition+delta*100/(Math.PI*4)));$('depth').value=Math.round(hoistPosition);$('depth').dispatchEvent(new Event('input'));$('scene').setAttribute('aria-valuenow',$('depth').value);}
 $('scene').addEventListener('pointerdown',e=>{const p=scenePoint(e);if(Math.hypot(p.x-248,p.y-278)>75||!active||replay||state.ended)return;e.preventDefault();crankDrag={id:e.pointerId,angle:Math.atan2(p.y-278,p.x-248)};$('scene').setPointerCapture(e.pointerId);$('scene').classList.add('cranking');});
 $('scene').addEventListener('pointermove',e=>{if(!crankDrag||crankDrag.id!==e.pointerId)return;const p=scenePoint(e);if(Math.hypot(p.x-248,p.y-278)<12)return;const angle=Math.atan2(p.y-278,p.x-248);const delta=Math.atan2(Math.sin(angle-crankDrag.angle),Math.cos(angle-crankDrag.angle));crankDrag.angle=angle;turnCrank(delta);});
 // Release capture on completion/cancellation, including gestures interrupted by the OS.
@@ -59,7 +59,7 @@ function startRun(playback=null){
  $('pause').disabled=false;$('pause').textContent='Ⅱ Pause';$('status').textContent=playback?'REPLAY':'';$('serve').disabled=!!playback;
  document.querySelectorAll('[data-speed]').forEach(b=>b.classList.toggle('active',b.dataset.speed==='1'));
  $('setup-summary').textContent=setup.mass+' kg · '+FLUIDS[setup.fluid].name;
- showScreen('cooking');
+ $('crank-hint').hidden=!!playback;showScreen('cooking');
 }
 $('start').onclick=()=>startRun();$('serve').onclick=()=>{endRun(state);finishRun();};
 $('pause').onclick=()=>{paused=!paused;$('pause').textContent=paused?'▶ Resume':'Ⅱ Pause';};

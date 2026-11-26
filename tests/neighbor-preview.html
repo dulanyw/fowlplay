@@ -1,0 +1,12 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Neighbor visual checks</title>
+<style>body{background:#191e24;color:#f3ebdb;font:16px Arial;display:flex;gap:20px;padding:25px;flex-wrap:wrap}figure{margin:0}canvas{display:block;margin-bottom:15px;border:1px solid #667}figcaption{max-width:240px}</style>
+<script type="module">
+import {createState,FLUIDS} from '../src/sim.js';
+import {drawScene} from '../src/art.js';
+// Deterministic visual fixtures for props and progressive transformation, independent of live timing.
+for(const [name,fluid,alien,phone] of [['Syrup: Mountie hat','syrup',0,false],['Bored: phone in right hand','oil',0,true],['Goo: beginning transformation','goo',.35,false],['Goo: fully transformed','goo',1,false]]){
+ const state=createState({prep:'thawed',fluid,mass:5,fill:50,heat:20});state.alienProgress=alien;state.gooCreep=alien?1:0;state.quietTime=phone?10:0;
+ const source=document.createElement('canvas');source.width=1000;source.height=660;drawScene(source.getContext('2d'),state,FLUIDS[fluid],0);
+ const figure=document.createElement('figure'),canvas=document.createElement('canvas'),caption=document.createElement('figcaption');canvas.width=240;canvas.height=270;canvas.getContext('2d').drawImage(source,745,190,145,165,0,0,240,270);caption.textContent=name;figure.append(canvas,caption);document.body.append(figure);
+}
+</script></html>

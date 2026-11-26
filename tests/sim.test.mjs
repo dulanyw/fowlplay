@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {createState,advance,assess,carvingDetails} from '../src/sim.js';
 import {earnedAchievements} from '../src/achievements.js';
 import {immersionGeometry,cellIsImmersed} from '../src/geometry.js';
+import {EFFECTS} from '../src/effects.js';
 const setup={prep:'thawed',fluid:'oil',mass:5,fill:50,heat:180};
 test('heat penetrates from edge toward core',()=>{const s=createState(setup);for(let i=0;i<400;i++)advance(s,{depth:100,heat:180});const center=s.cells.find(c=>c.x===9&&c.y===9);const edge=s.cells.find(c=>c.x===9&&c.y===18);assert.ok(edge.t>center.t);assert.ok(center.t>5);});
 test('overflow removes fluid and causes escalating damage',()=>{const s=createState({...setup,fill:90,prep:'frozen',heat:300});for(let i=0;i<500;i++)advance(s,{depth:100,heat:300});assert.ok(s.spill>0);assert.ok(s.damage>0);assert.ok(s.fill<.9);});
@@ -81,4 +82,15 @@ test('quiet runs bore the neighbor while spilled goo climbs',()=>{
  const goo=createState({...setup,fluid:'goo',fill:90,heat:80});
  for(let i=0;i<300;i++)advance(goo,{depth:100,heat:80});
  assert.ok(goo.spill>.002);assert.ok(goo.gooCreep>.3);assert.equal(goo.fire,0);
+});
+
+test('alien transformation starts only after goo contact and grows gradually',()=>{
+ const s=createState({...setup,fluid:'goo',heat:20});
+ s.gooCreep=EFFECTS.gooContact-.01;
+ advance(s,{depth:0,heat:20});assert.equal(s.neighborTouched,false);assert.equal(s.alienProgress,0);
+ s.gooCreep=EFFECTS.gooContact;
+ advance(s,{depth:0,heat:20});assert.equal(s.neighborTouched,true);assert.ok(s.alienProgress>0&&s.alienProgress<.01);
+ for(let i=0;i<100;i++)advance(s,{depth:0,heat:20});assert.ok(s.alienProgress>.3&&s.alienProgress<.6);
+ for(let i=0;i<200;i++)advance(s,{depth:0,heat:20});assert.equal(s.alienProgress,1);
+ const other=createState({...setup,heat:20});other.gooCreep=1;advance(other,{depth:0,heat:20});assert.equal(other.alienProgress,0);
 });

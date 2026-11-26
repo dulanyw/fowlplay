@@ -1,5 +1,5 @@
 import {immersionGeometry} from './geometry.js';
-import {EFFECTS} from './effects.js';
+import {EFFECTS,GOO_PATH} from './effects.js';
 // Canvas illustration helpers accept a context; they have no DOM or simulation side effects.
 function shape(c,fill,draw,stroke='#20262a',width=5){c.beginPath();draw();c.fillStyle=fill;c.fill();if(stroke){c.strokeStyle=stroke;c.lineWidth=width;c.lineJoin='round';c.stroke();}}
 function oval(c,x,y,rx,ry,fill){shape(c,fill,()=>c.ellipse(x,y,rx,ry,0,0,Math.PI*2));}
@@ -18,8 +18,50 @@ function drawVapor(c,s,fluid,surface,time){
 }
 // Goo follows an uphill path then scales the fence; growth is simulation state, not wall time.
 function drawGoo(c,s){
- if(s.gooCreep<=0)return;const points=[[590,599],[660,578],[715,534],[738,490],[735,430],[744,367],[741,313],[783,302],[833,310],[870,350]];
+ if(s.gooCreep<=0)return;const points=GOO_PATH;
  const length=s.gooCreep*(points.length-1),whole=Math.floor(length);c.beginPath();c.moveTo(...points[0]);for(let i=1;i<=whole;i++)c.lineTo(...points[i]);if(whole<points.length-1){const a=points[whole],b=points[whole+1],t=length-whole;c.lineTo(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t);}c.lineJoin='round';c.lineCap='round';c.strokeStyle='#29372b';c.lineWidth=25;c.stroke();c.strokeStyle='#a5dc76';c.lineWidth=18;c.stroke();
+}
+// Draw the neighbor's head, expression and fluid-specific hat behind the fence.
+// Returns pose data for foreground hands so the phone replaces, rather than duplicates, a hand.
+function drawNeighborBehindFence(c,s,time){
+ const alien=s.alienProgress||0;
+ const panic=s.fire>.2||s.chaos>1.8||s.gooCreep>.6;
+ const bored=!panic&&s.quietTime>EFFECTS.boredAfter;
+ const phone=bored&&Math.sin(time*.6)<=.25;
+ const ny=s.damage>30000?395:282;
+ const skin='rgb('+[231+(143-231)*alien,181+(210-181)*alien,132+(119-132)*alien].map(Math.round).join(',')+')';
+ box(c,775,ny+22,73,85,'#7c9ea5',20);
+ oval(c,810,ny-5*alien,34+10*alien,39+8*alien,skin);
+ // Alien eyes gradually grow and tilt, replacing the human pupils and safety goggles.
+ if(alien>.02){for(const side of [-1,1]){c.save();c.translate(810+side*14,ny-2);c.rotate(side*-.3*alien);oval(c,0,0,3+9*alien,4+11*alien,'#202a27');c.restore();}}
+ else if(panic)box(c,786,ny-10,47,17,'#a4d2d4',5);
+ else if(bored){line(c,795,ny+1,804,ny+1,'#23282b',3);line(c,817,ny+1,826,ny+1,'#23282b',3);}
+ else{oval(c,799,ny,3,4,'#23282b');oval(c,821,ny,3,4,'#23282b');}
+ if(alien>.1)line(c,805,ny+23,817,ny+23,'#26322b',3);
+ else if(panic||bored&&!phone)oval(c,812,ny+22,7,10,'#65453c');
+ else line(c,804,ny+20,818,ny+20);
+ const hatY=ny-21-12*alien;
+ if(s.setup.fluid==='syrup'){
+  // Wide flat brim and four-dent campaign crown: the Mountie silhouette.
+  shape(c,'#b68b51',()=>{c.moveTo(780,hatY);c.lineTo(786,hatY-33);c.lineTo(798,hatY-43);c.lineTo(810,hatY-34);c.lineTo(822,hatY-43);c.lineTo(834,hatY-33);c.lineTo(840,hatY);});
+  line(c,784,hatY-6,836,hatY-6,'#654632',8);oval(c,810,hatY-6,4,4,'#e7c565');
+  line(c,763,hatY+2,857,hatY+2,'#20262a',12);line(c,765,hatY+1,855,hatY+1,'#c59b5e',6);
+ }else{
+  shape(c,'#d7c39d',()=>{c.moveTo(770,hatY);c.lineTo(777,hatY-25);c.lineTo(836,hatY-25);c.lineTo(850,hatY+1);});line(c,768,hatY,854,hatY,'#23282b',6);
+ }
+ if(alien>.25){const growth=(alien-.25)/.75;for(const side of [-1,1]){line(c,810+side*29,ny-35,810+side*44,ny-35-growth*35,skin,6);oval(c,810+side*44,ny-35-growth*35,4+growth*3,4+growth*3,skin);}}
+ return{skin,phone,ny};
+}
+// Hands sit in front of the fence; the right arm lifts to grip the phone when it is in use.
+function drawNeighborHands(c,s,pose){
+ if(s.damage>30000)return;
+ oval(c,773,315,14,9,pose.skin);
+ if(pose.phone){
+  line(c,850,324,862,300,'#20262a',15);line(c,850,324,862,300,'#7c9ea5',10);
+  oval(c,859,299,11,13,pose.skin);
+  box(c,847,269,21,33,'#56676e',4);box(c,850,273,15,20,'#bed3c7',2);
+  oval(c,850,294,5,8,pose.skin);line(c,856,298,861,298,'#aebcb7',2);
+ }else oval(c,852,315,14,9,pose.skin);
 }
 // Draw a cartoon turkey; browning changes the exterior without exposing its center.
 export function bird(c,x,y,scale=1,brown=0){c.save();c.translate(x,y);c.scale(scale,scale);const skin=brown>2?'#594132':brown>.6?'#c57b3e':'#e5ac74';oval(c,0,0,66,79,skin);oval(c,-55,29,23,36,skin);oval(c,55,29,23,36,skin);line(c,-45,58,-57,88,'#f1dfba',12);line(c,45,58,57,88,'#f1dfba',12);oval(c,-58,91,11,7,'#f1dfba');oval(c,58,91,11,7,'#f1dfba');line(c,-15,-42,-30,-20,'#f6cc91',5);c.restore();}
@@ -35,11 +77,9 @@ function drawAutumn(c){
 }
 // Render scenery, neighbor, fence, then apparatus so the neighbor is occluded correctly.
 export function drawScene(c,s,fluid,visualTime,crankAngle=0){c.clearRect(0,0,1000,660);drawAutumn(c);
-const panic=s.fire>.2||s.chaos>1.8||s.gooCreep>.6;const bored=!panic&&s.quietTime>EFFECTS.boredAfter;const ny=s.damage>30000?395:282;
-box(c,775,ny+22,73,85,'#7c9ea5',20);oval(c,810,ny,34,39,'#e7b584');shape(c,'#d7c39d',()=>{c.moveTo(770,ny-21);c.lineTo(777,ny-46);c.lineTo(836,ny-46);c.lineTo(850,ny-20);});line(c,768,ny-21,854,ny-21,'#23282b',6);oval(c,799,ny,3,4,'#23282b');oval(c,821,ny,3,4,'#23282b');if(panic){box(c,786,ny-10,47,17,'#a4d2d4',5);oval(c,812,ny+22,7,10,'#65453c');}else line(c,804,ny+20,818,ny+20);
+const neighbor=drawNeighborBehindFence(c,s,visualTime);
 for(let x=0;x<1040;x+=52){box(c,x,310,48,190,s.damage>20000&&x>680?'#493f34':'#a1815e',5);line(c,x+15,333,x+15,479,'#8e7051',2);}line(c,0,382,1000,382,'#70593f',10);
-if(s.damage<=30000){oval(c,773,315,14,9,'#e7b584');oval(c,852,315,14,9,'#e7b584');}
-if(bored&&s.damage<=30000){line(c,792,281,805,281,'#e7b584',8);line(c,815,281,828,281,'#e7b584',8);line(c,795,283,804,283,'#23282b',3);line(c,817,283,826,283,'#23282b',3);if(Math.sin(visualTime*.6)>.25)oval(c,811,301,7,10,'#805346');else{line(c,795,300,822,300,'#23282b',3);box(c,848,276,17,28,'#677a7d',4);line(c,850,285,860,285,'#bed3c7',2);}}
+drawNeighborHands(c,s,neighbor);
 drawGoo(c,s);
 // Gantry and fixed vertical rope.
 line(c,215,565,270,80,'#20262a',24);line(c,665,565,610,80,'#20262a',24);line(c,215,565,270,80,'#9aa5a3',13);line(c,665,565,610,80,'#9aa5a3',13);line(c,267,80,613,80,'#20262a',24);line(c,267,80,613,80,'#9aa5a3',13);oval(c,440,84,19,19,'#d4a85d');const geometry=immersionGeometry(s.depth,s.fill,s.setup.mass);const by=geometry.center;line(c,440,100,440,by-77,'#dfc599',5);line(c,260,160,260,278,'#dfc599',4);oval(c,248,278,26,26,'#bd8c59');const hx=248+Math.cos(crankAngle)*39,hy=278+Math.sin(crankAngle)*39;line(c,248,278,hx,hy,'#20262a',8);oval(c,hx,hy,11,11,'#ffd267');

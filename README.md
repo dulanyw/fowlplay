@@ -25,3 +25,7 @@ All artwork and code were created for this project. A distribution license has n
 Simulation v2 shares the same turkey/fluid geometry between drawing and heat transfer. Only cells below the visible liquid surface receive liquid heat. Air exchange uses ambient 22°C; hot plumes, steam convection, radiation, and fire-to-meat heating are not modeled. Older v1 replay links are not replayed under the changed model. `src/geometry.js` owns immersion and displacement geometry.
 
 Simulation v3 adds measured overflow streams, finite spilled fuel, evaporation and cooling, quiet-time neighbor reactions, and persistent goo growth over the fence. All use fixed simulation time, so pause and speed controls apply consistently. `src/effects.js` owns these rates and state transitions. Evaporation removes liquid without immersion; the resulting vapor is visual and does not heat the turkey. Replay links must match the current simulation version (v3).
+
+## Social preview
+
+The static `assets/social-preview.png` is a 1200×630 PNG used by Open Graph and large-image Twitter cards. Metadata uses the public `https://dulanyw.github.io/fowlplay/` URL. Push both the HTML and asset for previews to work; social services may cache older cards. Rebuild the original illustrated card on Windows with `powershell -NoProfile -File tools/New-SocialCard.ps1`. Update the canonical, Open Graph, and Twitter URLs if the hosting address changes.
